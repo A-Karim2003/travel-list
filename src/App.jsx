@@ -8,7 +8,7 @@ function App() {
       <Logo />
       <Form setItems={setItems} />
       <PackingList items={items} setItems={setItems} />
-      <Stats />
+      <Stats items={items} />
     </div>
   );
 }
@@ -48,7 +48,7 @@ function Form({ setItems }) {
   }
 
   return (
-    <form action="post" className="add-form" onSubmit={handleSubmit}>
+    <form className="add-form" onSubmit={handleSubmit}>
       <h3>What do you need for you trip?</h3>
 
       <select
@@ -78,13 +78,44 @@ function Form({ setItems }) {
 }
 
 function PackingList({ items, setItems }) {
+  const [sortBy, setSortBy] = useState("input");
+
+  let sortedItems;
+
+  if (sortBy === "input") sortedItems = items;
+
+  if (sortBy === "description") {
+    sortedItems = [...items].sort((a, b) =>
+      a.description.localeCompare(b.description)
+    );
+  }
+
+  if (sortBy === "status")
+    sortedItems = [...items].sort(
+      (a, b) => Number(a.packed) - Number(b.packed)
+    );
+
+  function clearList() {
+    const confirmed = confirm("Are you sure you want to delete all items");
+    if (confirmed) setItems([]);
+  }
+
   return (
     <div className="list">
       <ul>
-        {items.map((item) => (
+        {sortedItems.map((item) => (
           <Item item={item} setItems={setItems} key={item.id} />
         ))}
       </ul>
+
+      <div className="actions">
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+          <option value="input">Sort by input order</option>
+          <option value="description">Sort by description</option>
+          <option value="status">Sort by packed status</option>
+        </select>
+        <button onClick={clearList}>Clear list</button>
+      </div>
     </div>
   );
 }
@@ -104,7 +135,11 @@ function Item({ item, setItems }) {
 
   return (
     <li>
-      <input type="checkbox" onChange={() => handlePacked(item.id)} />
+      <input
+        checked={item.packed}
+        type="checkbox"
+        onChange={() => handlePacked(item.id)}
+      />
 
       <span style={{ textDecoration: item.packed ? "line-through" : "none" }}>
         {item.quantity} {item.description}
@@ -114,10 +149,31 @@ function Item({ item, setItems }) {
   );
 }
 
-function Stats() {
+function Stats({ items }) {
+  function handlePackedAmount() {
+    return items.filter((item) => item.packed).length;
+  }
+
+  function handlePackedPercentage() {
+    const total = items.length;
+    const packed = handlePackedAmount();
+    return Math.round((packed / total) * 100);
+  }
+
+  function DisplayMessage() {
+    if (items.length === 0) return "Start adding some items...";
+
+    if (handlePackedAmount() === items.length) return "You are ready to go";
+
+    return `
+        💼 You have ${items.length} items on your list, and you already packed
+        ${handlePackedAmount()} (${handlePackedPercentage()}%)
+      `;
+  }
+
   return (
     <footer className="stats">
-      <em>💼 You have 1 items on your list, and you already packed 0 (0%)</em>
+      <em>{DisplayMessage()}</em>
     </footer>
   );
 }

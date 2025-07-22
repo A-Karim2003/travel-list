@@ -85,10 +85,10 @@ input {
   padding: 4rem 0;
 
   display: flex;
-  justify-content: space-between;
   flex-direction: column;
-  gap: 3.2rem;
+  justify-content: space-between;
   align-items: center;
+  gap: 3.2rem;
 }
 
 .actions button,
